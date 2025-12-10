@@ -2,19 +2,21 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Chat + Loja</title>
+<title>Chat + Loja PIX</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body{margin:0;font-family:Arial;background:#0b0b0b;color:white;height:100vh;display:flex;flex-direction:column;}
 header{background:#111;padding:10px;display:flex;justify-content:space-between;align-items:center;}
-#menu{cursor:pointer;font-size:20px;}
+#menu{cursor:pointer;font-size:22px;}
 #dropdown{display:none;position:absolute;right:10px;top:50px;background:#222;padding:10px;border-radius:5px;}
 #chat{flex:1;overflow-y:auto;padding:15px;}
 .msg{background:#1f1f1f;margin-bottom:8px;padding:8px;border-radius:6px;}
 footer{display:flex;padding:10px;background:black;}
 input{flex:1;padding:10px;}
-button{padding:10px;background:#ff0055;color:white;border:none;}
-.produto{border:1px solid #444;padding:8px;margin-top:5px;}
+button{padding:10px;background:#ff0055;color:white;border:none;margin-top:5px;cursor:pointer;}
+.produto{border:1px solid #444;padding:10px;margin-top:10px;border-radius:6px;}
+.pixbox{text-align:center;border:1px solid #555;padding:10px;margin-top:10px;}
+img{max-width:220px;}
 </style>
 </head>
 <body>
@@ -30,7 +32,7 @@ button{padding:10px;background:#ff0055;color:white;border:none;}
 <div id="chat"></div>
 
 <footer>
-<input id="txt">
+<input id="txt" placeholder="Digite sua mensagem">
 <button onclick="enviar()">Enviar</button>
 </footer>
 
@@ -43,12 +45,16 @@ socket.emit("joinRoom", sala);
 const chat=document.getElementById("chat");
 const txt=document.getElementById("txt");
 
+const PIX = "d874698e-ba8a-492f-9cfc-b7f487aac459";
+const WHATS = "https://wa.me/5516997410282?text=Comprei%205%20Mix%20Full";
+
 function toggle(){
   const d=document.getElementById("dropdown");
   d.style.display=d.style.display==="none"?"block":"none";
 }
 
 function enviar(){
+  if(!txt.value.trim()) return;
   socket.emit("msg",{room:sala,texto:txt.value});
   txt.value="";
 }
@@ -68,30 +74,41 @@ socket.on("globalAlert",d=>{
   chat.appendChild(div);
 });
 
+window.produtos=[];
+
 socket.on("produtos",lista=>{
   window.produtos=lista;
 });
 
 function mostrarLoja(){
-  chat.innerHTML="<h3>LOJA</h3>";
+  chat.innerHTML="<h3>🛒 LOJA</h3>";
   produtos.forEach(p=>{
     const div=document.createElement("div");
     div.className="produto";
     div.innerHTML=`
-    ${p.nome} - R$${p.preco}
-    <button onclick="comprar(${p.id})">Comprar</button>
+    <b>${p.nome}</b><br>
+    Valor: R$${p.preco}
+
+    <div class="pixbox">
+      <p>Chave PIX:</p>
+      <small>${PIX}</small><br><br>
+      <img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${PIX}">
+      <br><br>
+      <button onclick="copiar()">Copiar Chave</button>
+      <button onclick="jaPaguei()">✅ Já paguei</button>
+    </div>
     `;
     chat.appendChild(div);
   });
 }
 
-async function comprar(id){
-  await fetch("/comprar",{
-    method:"POST",
-    headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({produtoId:id})
-  });
-  alert("Pedido enviado");
+function copiar(){
+  navigator.clipboard.writeText(PIX);
+  alert("Chave PIX copiada!");
+}
+
+function jaPaguei(){
+  window.location.href = WHATS;
 }
 </script>
 
