@@ -7,7 +7,12 @@ const server = http.createServer(app);
 const io = new Server(server);
 
 app.use(express.static("public"));
+app.use(express.json());
 
+const ADMIN_USER = "HKCHEF";
+const ADMIN_PASS = "190108Hk";
+
+// Chat normal
 io.on("connection", (socket) => {
 
   socket.on("joinRoom", (room) => {
@@ -33,5 +38,34 @@ io.on("connection", (socket) => {
 
 });
 
+// Painel Admin (rota protegida)
+app.get("/admin", (req, res) => {
+  res.sendFile(__dirname + "/public/admin.html");
+});
+
+// Verifica login
+app.post("/admin-login", (req, res) => {
+  const { user, pass } = req.body;
+
+  if (user === ADMIN_USER && pass === ADMIN_PASS) {
+    res.json({ ok: true });
+  } else {
+    res.json({ ok: false });
+  }
+});
+
+// Botão de destruição
+app.post("/destroy", (req, res) => {
+  io.emit("msg", { id: "SISTEMA", texto: "⚠️ SERVIDOR ENCERRADO PELO ADMIN" });
+
+  setTimeout(() => {
+    process.exit(0); // MATA O SERVIDOR
+  }, 1000);
+
+  res.json({ ok: true });
+});
+
 const PORT = process.env.PORT || 3000;
-server.listen(PORT);
+server.listen(PORT, () => {
+  console.log("Servidor rodando...");
+});
