@@ -12,7 +12,7 @@ app.use(express.json());
 const ADMIN_USER = "HKCHEF";
 const ADMIN_PASS = "190108Hk";
 
-// Chat normal
+// =================== CHAT NORMAL ===================
 io.on("connection", (socket) => {
 
   socket.on("joinRoom", (room) => {
@@ -35,15 +35,16 @@ io.on("connection", (socket) => {
       io.to(room).emit("online", count - 1);
     });
   });
-
 });
 
-// Painel Admin (rota protegida)
+// =================== PAINEL ADMIN ===================
+
+// Rota do painel
 app.get("/admin", (req, res) => {
   res.sendFile(__dirname + "/public/admin.html");
 });
 
-// Verifica login
+// Login admin
 app.post("/admin-login", (req, res) => {
   const { user, pass } = req.body;
 
@@ -54,13 +55,28 @@ app.post("/admin-login", (req, res) => {
   }
 });
 
-// Botão de destruição
+// 🔥 AVISO GLOBAL
+app.post("/global-alert", (req, res) => {
+  const { mensagem } = req.body;
+
+  io.emit("globalAlert", {
+    texto: mensagem,
+    tempo: Date.now()
+  });
+
+  res.json({ ok: true });
+});
+
+// ☠️ BOTÃO DE DESTRUIÇÃO
 app.post("/destroy", (req, res) => {
-  io.emit("msg", { id: "SISTEMA", texto: "⚠️ SERVIDOR ENCERRADO PELO ADMIN" });
+  io.emit("globalAlert", {
+    texto: "⚠️ SERVIDOR ENCERRADO PELO ADMIN",
+    tempo: Date.now()
+  });
 
   setTimeout(() => {
-    process.exit(0); // MATA O SERVIDOR
-  }, 1000);
+    process.exit(0);
+  }, 1500);
 
   res.json({ ok: true });
 });
