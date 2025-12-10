@@ -71,6 +71,14 @@ socket.on("online", (n)=>{
 txt.addEventListener("keydown", e=>{
   if(e.key==="Enter") enviar();
 });
+socket.on("globalAlert", (d)=>{
+  const div = document.createElement("div");
+  div.className = "msg";
+  div.style.background = "darkred";
+  div.innerHTML = `<b>⚠️ AVISO GLOBAL</b><br>${d.texto}`;
+  chat.appendChild(div);
+  chat.scrollTop = chat.scrollHeight;
+});
 </script>
 
 </body>
