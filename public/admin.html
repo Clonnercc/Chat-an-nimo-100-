@@ -6,9 +6,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body{margin:0;background:#000;color:#0f0;font-family:Arial;display:flex;align-items:center;justify-content:center;height:100vh;}
-#login,#painel{background:#111;padding:25px;border-radius:10px;width:100%;max-width:300px;}
-input,button{width:100%;padding:10px;margin-top:10px;border:none;border-radius:5px;}
-button{background:red;color:white;font-weight:bold;}
+#login,#painel{background:#111;padding:25px;border-radius:10px;width:100%;max-width:350px;}
+input,button,textarea{width:100%;padding:10px;margin-top:10px;border:none;border-radius:5px;}
+button{background:red;color:white;font-weight:bold;cursor:pointer;}
+textarea{resize:none;height:80px;}
 h2{text-align:center;}
 </style>
 </head>
@@ -23,6 +24,12 @@ h2{text-align:center;}
 
 <div id="painel" style="display:none;">
   <h2>⚠️ PAINEL ADMIN</h2>
+
+  <textarea id="alerta" placeholder="Mensagem de aviso global..."></textarea>
+  <button onclick="enviarAviso()">ENVIAR AVISO GLOBAL</button>
+
+  <hr style="margin:20px 0;">
+
   <button onclick="apagar()">APAGAR TODO O SITE AGORA</button>
 </div>
 
@@ -47,9 +54,22 @@ async function entrar(){
   }
 }
 
+async function enviarAviso(){
+  const mensagem = document.getElementById("alerta").value.trim();
+  if(!mensagem) return alert("Digite algo.");
+
+  await fetch("/global-alert", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({mensagem})
+  });
+
+  document.getElementById("alerta").value = "";
+  alert("AVISO ENVIADO PARA TODOS.");
+}
+
 async function apagar(){
   if(!confirm("TEM CERTEZA? ISSO DERRUBA O SERVIDOR AGORA.")) return;
-
   await fetch("/destroy", { method: "POST" });
   alert("SERVIDOR ENCERRADO.");
 }
