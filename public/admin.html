@@ -1,77 +1,53 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Painel Admin</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin</title>
 <style>
-body{margin:0;background:#000;color:#0f0;font-family:Arial;display:flex;align-items:center;justify-content:center;height:100vh;}
-#login,#painel{background:#111;padding:25px;border-radius:10px;width:100%;max-width:350px;}
-input,button,textarea{width:100%;padding:10px;margin-top:10px;border:none;border-radius:5px;}
-button{background:red;color:white;font-weight:bold;cursor:pointer;}
-textarea{resize:none;height:80px;}
-h2{text-align:center;}
+body{background:black;color:#0f0;font-family:Arial;padding:20px;}
+input,button,textarea{width:100%;margin-top:10px;padding:10px;}
+button{background:red;color:white;}
 </style>
 </head>
 <body>
 
 <div id="login">
-  <h2>ADMIN LOGIN</h2>
-  <input id="user" placeholder="Usuário">
-  <input id="pass" type="password" placeholder="Senha">
-  <button onclick="entrar()">ENTRAR</button>
+<input id="user" placeholder="Usuário">
+<input id="pass" type="password" placeholder="Senha">
+<button onclick="entrar()">Entrar</button>
 </div>
 
 <div id="painel" style="display:none;">
-  <h2>⚠️ PAINEL ADMIN</h2>
+<h3>Aviso Global</h3>
+<textarea id="aviso"></textarea>
+<button onclick="avisar()">Enviar Aviso</button>
 
-  <textarea id="alerta" placeholder="Mensagem de aviso global..."></textarea>
-  <button onclick="enviarAviso()">ENVIAR AVISO GLOBAL</button>
+<h3>Adicionar Produto</h3>
+<input id="nome" placeholder="Nome">
+<input id="preco" placeholder="Preço">
+<button onclick="addProduto()">Adicionar</button>
 
-  <hr style="margin:20px 0;">
-
-  <button onclick="apagar()">APAGAR TODO O SITE AGORA</button>
+<h3>Sistema</h3>
+<button onclick="apagar()">DESTRUIR SISTEMA</button>
 </div>
 
 <script>
 async function entrar(){
-  const user = document.getElementById("user").value;
-  const pass = document.getElementById("pass").value;
-
-  const res = await fetch("/admin-login", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({user, pass})
-  });
-
-  const data = await res.json();
-
-  if(data.ok){
-    document.getElementById("login").style.display="none";
-    document.getElementById("painel").style.display="block";
-  } else {
-    alert("ACESSO NEGADO");
-  }
+ const r=await fetch("/admin-login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({user:user.value,pass:pass.value})});
+ const d=await r.json();
+ if(d.ok){login.style.display="none";painel.style.display="block";}
 }
 
-async function enviarAviso(){
-  const mensagem = document.getElementById("alerta").value.trim();
-  if(!mensagem) return alert("Digite algo.");
-
-  await fetch("/global-alert", {
-    method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({mensagem})
-  });
-
-  document.getElementById("alerta").value = "";
-  alert("AVISO ENVIADO PARA TODOS.");
+function avisar(){
+ fetch("/global-alert",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({mensagem:aviso.value})});
 }
 
-async function apagar(){
-  if(!confirm("TEM CERTEZA? ISSO DERRUBA O SERVIDOR AGORA.")) return;
-  await fetch("/destroy", { method: "POST" });
-  alert("SERVIDOR ENCERRADO.");
+function addProduto(){
+ fetch("/add-produto",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({nome:nome.value,preco:preco.value})});
+}
+
+function apagar(){
+ fetch("/destroy",{method:"POST"});
 }
 </script>
 
