@@ -2,22 +2,34 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Chat Anônimo</title>
+<title>Chat Anônimo com Produtos</title>
 <link rel="stylesheet" href="style.css">
 </head>
 <body>
-<div id="chat"></div>
+<h1>Chat Anônimo</h1>
+
+<div id="chatContainer">
+  <div id="chatMessages" style="height:300px; overflow-y:auto; border:1px solid #ccc; padding:5px;"></div>
+  <input type="text" id="msgInput" placeholder="Digite sua mensagem">
+  <button onclick="sendMessage()">Enviar</button>
+</div>
+
 <div class="menu">
   <button onclick="toggleMenu()">⋮</button>
   <div id="menuOptions" style="display:none;">
     <button onclick="openProducts()">🛒 Ver Produtos</button>
   </div>
 </div>
-<div id="payment" style="display:none;">
-  <h3>Escaneie o QR Code Pix</h3>
-  <img id="qrCode" width="200">
+
+<div id="productsContainer" style="display:none;"></div>
+
+<div id="paymentContainer" style="display:none;">
+  <h3>Escaneie o QR Code Pix para pagar</h3>
+  <img id="pixQRCode" width="200">
+  <p>Após pagamento, clique em “Já paguei”</p>
   <button onclick="confirmPayment()">Já paguei</button>
 </div>
+
 <script src="/socket.io/socket.io.js"></script>
 <script src="chat.js"></script>
 </body>
