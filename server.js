@@ -1,6 +1,7 @@
 const express = require("express");
 const http = require("http");
 const { Server } = require("socket.io");
+const crypto = require("crypto");
 
 const app = express();
 const server = http.createServer(app);
@@ -9,15 +10,22 @@ const io = new Server(server);
 app.use(express.static("public"));
 app.use(express.json());
 
-const ADMIN_USER = "HKCHEF";
-const ADMIN_PASS = "190108Hk";
+// ================= CONFIG =================
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN;
 
-// ================= MEMÓRIA (SEM BANCO) =================
+// ================= MEMÓRIA (VOLÁTIL) =================
 let produtos = [];
-let pedidos = [];
+
+// ================= FUNÇÕES =================
+function gerarId() {
+  return crypto.randomBytes(3).toString("hex");
+}
 
 // ================= CHAT =================
+const lastMsg = new Map();
+
 io.on("connection", (socket) => {
+  socket.userId = gerarId();
 
   socket.on("joinRoom", (room) => {
     socket.join(room);
@@ -27,70 +35,45 @@ io.on("connection", (socket) => {
   });
 
   socket.on("msg", ({ room, texto }) => {
+    const agora = Date.now();
+    const ultimo = lastMsg.get(socket.id) || 0;
+
+    if (agora - ultimo < 1000) return;
+
+    lastMsg.set(socket.id, agora);
+
     io.to(room).emit("msg", {
-      id: socket.id.slice(0, 5),
-      texto
+      id: socket.userId,
+      texto: texto.slice(0, 200)
     });
   });
 
 });
 
 // ================= ADMIN =================
+function auth(req, res, next) {
+  if (req.headers.authorization !== ADMIN_TOKEN) {
+    return res.status(403).json({ ok: false });
+  }
+  next();
+}
 
 app.get("/admin", (req, res) => {
   res.sendFile(__dirname + "/public/admin.html");
 });
 
-// Login
-app.post("/admin-login", (req, res) => {
-  const { user, pass } = req.body;
-  res.json({ ok: user === ADMIN_USER && pass === ADMIN_PASS });
-});
-
-// ✅ Adicionar produto
-app.post("/add-produto", (req, res) => {
+app.post("/add-produto", auth, (req, res) => {
   const { nome, preco } = req.body;
-
-  const produto = {
-    id: Date.now(),
-    nome,
-    preco
-  };
-
-  produtos.push(produto);
-
+  produtos.push({ id: Date.now(), nome, preco });
   io.emit("produtos", produtos);
   res.json({ ok: true });
 });
 
-// ✅ Comprar produto
-app.post("/comprar", (req, res) => {
-  const { produtoId } = req.body;
-
-  const produto = produtos.find(p => p.id == produtoId);
-  if (!produto) return res.json({ ok: false });
-
-  pedidos.push({
-    produto: produto.nome,
-    preco: produto.preco,
-    data: new Date()
-  });
-
-  res.json({ ok: true });
-});
-
-// ✅ Aviso global
-app.post("/global-alert", (req, res) => {
+app.post("/global-alert", auth, (req, res) => {
   io.emit("globalAlert", { texto: req.body.mensagem });
   res.json({ ok: true });
 });
 
-// ✅ Destruição total
-app.post("/destroy", (req, res) => {
-  io.emit("globalAlert", { texto: "⚠️ SISTEMA ENCERRADO PELO ADMIN" });
-  setTimeout(() => process.exit(0), 1500);
-  res.json({ ok: true });
-});
-
+// ================= START =================
 const PORT = process.env.PORT || 3000;
 server.listen(PORT);
